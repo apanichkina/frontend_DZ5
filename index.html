@@ -1,0 +1,126 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <style>
+        body {
+            margin: 0px;
+            padding: 0px;
+        }
+    </style>
+</head>
+<body>
+<canvas id="myCanvas" width="1200" height="800"></canvas>
+<script>
+    (function(){
+
+        function init(){
+            var canvas = document.getElementById('myCanvas');
+            var context = canvas.getContext('2d');
+            var container = {x:100,y:100,width:1100,height:700};
+            function ball(x,y,r,Vx,Vy,color0,color1) {
+                this.x = x,
+                this.y = y,
+                this.r = r,
+                this.Vx = Vx,
+                this.Vy = Vy,
+                this.color0 = color0,
+                this.color1 = color1
+            }
+            var balls = [];
+            balls.push(new ball(600, 200, 30, -5, 8, '#8ED6FF','#004CB3'));
+            balls.push(new ball(400, 200, 30, 4, 5, '#CC6633', '#85004B'));
+            balls.push(new ball(200, 200, 30, -6, 3, '#990000','#FFCC66'));
+            balls.push(new ball(300, 200, 30, 5, 2, '#FFFF00', '#9933CC'));
+            balls.push(new ball(500, 700, 30, 5, 2, '#66CCCC', '#000066'));
+
+
+            function Collision(i,j){
+                var rezult = -1;
+                var a = parseFloat(balls[j].x) - parseFloat(balls[i].x);
+                var b = parseFloat(balls[j].y) - parseFloat(balls[i].y);
+                var distance = Math.sqrt(a * a + b * b);
+                var minDistance = parseFloat(balls[i].r) + parseFloat(balls[j].r);
+                if (distance > minDistance) rezult = 0;
+                else {
+                    if (a > 0) {
+                        rezult = 1;
+                        console.log(a,rezult);
+                    }
+                    if (a <= 0) {
+                        rezult = 2;
+                        console.log(a,rezult);
+                    }
+                }
+                return rezult;
+
+            }
+            function draw(){
+                context.fillStyle = 'black';
+                context.strokeStyle = 'black';
+                context.fillRect(container.x,container.y,container.width,container.height);
+
+
+                for(var i=0; i <balls.length; i++){
+                    //var grd = context.createRadialGradient(balls[i].x,balls[i].y, balls[i].r, balls[i].x,balls[i].y, balls[i].r/30);
+                    var grd = context.createLinearGradient(balls[i].x-balls[i].r,balls[i].y,balls[i].x+balls[i].r/2,balls[i].y);
+                    grd.addColorStop(0, balls[i].color0);
+                    grd.addColorStop(1, balls[i].color1);
+                    context.beginPath();
+                    context.arc(balls[i].x,balls[i].y,balls[i].r,0,2*Math.PI,false);
+                    context.fillStyle = grd;
+                    context.fill();
+
+                    if((balls[i].x + balls[i].Vx + balls[i].r > container.x + container.width) || (balls[i].x - balls[i].r + balls[i].Vx < container.x)){
+                        balls[i].Vx = - balls[i].Vx;
+                    }
+                    if((balls[i].y + balls[i].Vy + balls[i].r > container.y + container.height) || (balls[i].y - balls[i].r + balls[i].Vy < container.y)){
+                        balls[i].Vy = - balls[i].Vy;
+                    }
+                    balls[i].x +=balls[i].Vx;
+                    balls[i].y +=balls[i].Vy;
+                }
+                for(var j = 1; j < balls.length; ++j){
+                    for(var i = j - 1 ;i >= 0; --i) {
+
+                        var collision = Collision(i, j);
+                        if (collision > 0) {
+
+                            balls[i].Vx = -balls[i].Vx;
+                            balls[i].Vy = -balls[i].Vy;
+                            balls[i].x += balls[i].Vx;
+                            balls[i].y += balls[i].Vy;
+
+
+                            balls[j].Vx = -balls[j].Vx;
+                            balls[j].Vy = -balls[j].Vy;
+                            balls[j].x += balls[j].Vx;
+                            balls[j].y += balls[j].Vy;
+
+                            if (collision == 1) {
+                                var tempColor = balls[i].color1;
+                                balls[i].color1 = balls[j].color0;
+                                balls[j].color0 = tempColor;
+                                console.log("right");
+
+
+                            }
+                            if (collision == 2) {
+                                var tempColor = balls[j].color1;
+                                balls[j].color1 = balls[i].color0;
+                                balls[i].color0 = tempColor;
+                                console.log("left");
+                            }
+                        }
+                    }
+                }
+                requestAnimationFrame(draw);
+            }
+            requestAnimationFrame(draw);
+        }
+//invoke function init once document is fully loaded
+        window.addEventListener('load',init,false);
+
+    }());  //self invoking function
+</script>
+</body>
+</html>
