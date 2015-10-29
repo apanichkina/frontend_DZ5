@@ -9,10 +9,7 @@
     </style>
 </head>
 <body>
-<canvas id="myCanvas" width="1200" height="800"></canvas>
-<div id="plus">+</div>
-<div id="number"></div>
-<div id="minus">-</div>
+<canvas id="myCanvas" ></canvas>
 <script>
     (function(){
 
@@ -23,30 +20,28 @@
             var height = window.innerHeight;
             canvas.width = width;
             canvas.height = height;
-
+//            canvas.x = imageObj.x;
+//            canvas.y = imageObj.y;
             var container = {x:0,y:0,width:width,height:height};
+            var imageObj = new Image();
+            imageObj.onload = function() {
+                context.drawImage(imageObj, container.x, container.y, container.width, container.height);
+            };
+            imageObj.src = "football_field.jpg";
 
-
-
-            function ball(x,y,r,Vx,Vy,color0,color1) {
+            function ball(x,y,r,Vx,Vy) {
                 this.x = x,
-                this.y = y,
-                this.r = r,
-                this.Vx = Vx,
-                this.Vy = Vy,
-                this.color0 = color0,
-                this.color1 = color1
+                        this.y = y,
+                        this.r = r,
+                        this.Vx = Vx,
+                        this.Vy = Vy
             }
             var balls = [];
-            balls.push(new ball(600, 200, 30, -5, 8, '#8ED6FF','#004CB3'));
-            balls.push(new ball(400, 200, 30, 4, 5, '#CC6633', '#85004B'));
-            balls.push(new ball(200, 200, 30, -6, 3, '#990000','#FFCC66'));
-            balls.push(new ball(300, 200, 30, 5, 2, '#FFFF00', '#9933CC'));
-            balls.push(new ball(500, 700, 30, 5, 2, '#66CCCC', '#000066'));
-            balls.push(new ball(200, 300, 30, 5, 2, '#C99024', '#42208E'));
-            balls.push(new ball(280, 400, 30, 5, 2, '#FFBD88', '#DEAA88'));
-            balls.push(new ball(400, 400, 30, 5, 2, '#D2B48C', '#7BA05B'));
-            balls.push(new ball(500, 200, 30, 5, 2, '#8FBC8F', '#9F8170'));
+            balls.push(new ball(600, 200, 10, 5, 3));
+            balls.push(new ball(400, 200, 20, 1, 5));
+            balls.push(new ball(200, 200, 20, 2, 4));
+            balls.push(new ball(300, 200, 20, 3, 2));
+            balls.push(new ball(500, 700, 20, -6, 3));
 
             function isCollision(i,j) { //проверить удар по касательной
                 var a = parseFloat(balls[j].x) - parseFloat(balls[i].x);
@@ -54,37 +49,47 @@
                 var distance = Math.sqrt(a * a + b * b);
                 var minDistance = parseFloat(balls[i].r) + parseFloat(balls[j].r);
                 return distance <= minDistance;
-
             }
-            //TODO плохо обрабатываются колизии, шарики слепляются 
             function Collision(i,j){
+                if (!isCollision(i,j)) return null;
+                else {
                     var dx = parseFloat(balls[j].x) - parseFloat(balls[i].x);
-                    if (dx > 0) {
-
-                        return 1;
-                    }
-                    else {
-
-                        return -1;
-
-                    }
-
-
+                    if (dx > 0) return 1;
+                    else return -1;
+                }
             }
-            function draw(){
-                context.fillStyle = 'black';
-                context.strokeStyle = 'black';
-                context.fillRect(container.x,container.y,container.width,container.height);
+            var imageObjBall = new Image();
+            imageObjBall.src = "ball2.jpg";
 
+            var imageObjHead = new Image();
+            imageObjHead.src = "head.png";
+
+            function draw(){
+                context.fillStyle = imageObj.onload();
+                //context.strokeStyle = 'black';
 
                 for(var i=0; i <balls.length; i++){
-                    var grd = context.createLinearGradient(balls[i].x-balls[i].r,balls[i].y,balls[i].x+balls[i].r/2,balls[i].y);
-                    grd.addColorStop(0, balls[i].color0);
-                    grd.addColorStop(1, balls[i].color1);
-                    context.beginPath();
-                    context.arc(balls[i].x,balls[i].y,balls[i].r,0,2*Math.PI,false);
-                    context.fillStyle = grd;
-                    context.fill();
+
+                    if (i==0) {
+                        context.beginPath();
+                        context.arc(balls[i].x,balls[i].y,balls[i].r,0,2*Math.PI,false);
+                        var grd = context.createPattern(imageObjBall, 'repeat');
+                        context.fillStyle = grd;
+                        context.fill();
+                    } else {
+                        var imgX = balls[i].x-balls[i].r;
+                        var imgY = balls[i].y-balls[i].r
+                        var imgW = balls[i].r* 2;
+                        var imgH = balls[i].r* 2;
+                        context.save();
+                        context.beginPath();
+                        context.translate(balls[i].x,balls[i].y);
+                        context.rotate(Math.atan2( balls[i].Vy, balls[i].Vx) - Math.PI/2);
+                        var grd = context.drawImage(imageObjHead, -imgW/2,-imgH/2, imgW, imgH);
+                        context.fillStyle = grd;
+                        context.fill();
+                        context.restore();
+                    }
 
                     if((balls[i].x + balls[i].Vx + balls[i].r > container.x + container.width) || (balls[i].x - balls[i].r + balls[i].Vx < container.x)){
                         balls[i].Vx = - balls[i].Vx;
@@ -94,6 +99,7 @@
                     }
                     balls[i].x +=balls[i].Vx;
                     balls[i].y +=balls[i].Vy;
+
                 }
                 for(var j = 1; j < balls.length; ++j){
                     for(var i = j - 1 ;i >= 0; --i) {
@@ -117,7 +123,6 @@
                                 var tempColor = balls[i].color1;
                                 balls[i].color1 = balls[j].color0;
                                 balls[j].color0 = tempColor;
-                                console.log("right");
                             }
                             if (collision == -1) {
                                 var tempColor = balls[j].color1;
@@ -131,9 +136,7 @@
             }
             requestAnimationFrame(draw);
         }
-
         window.addEventListener('load',init,false);
-
     }());
 </script>
 </body>
